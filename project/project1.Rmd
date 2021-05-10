@@ -1,0 +1,169 @@
+---
+title: 'Project 1: Exploratory Data Analysis'
+author: "SDS348"
+date: ''
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+  pdf_document:
+    toc: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+Abbie Duncan (aed2542)
+
+#Introduction
+
+For this project I used a dataset called happy and another dataset called heights. I found this data from the built in data from R studio. The first dataset includes responses from the general social survey from 1972-2006 for Americans. The happy data set includes a wide range of variables compared to general happiness. The data compares happiness level to age, degree, financial status, health, marital status, and sex. The second data set, heights contains 2012 heights, incomes, weight, sex, age, marital status, education, and Armed Forces qualification. I chose these two data sets because I am tall, so I thought it was really interesting to look at that data. I thought this could be an interesting comparison because there are many things that can affect someones happiness such as: income, marital status, education level, etc. Furthermore, I think it will be interesting to see if being taller is beneficial. Ultimatley, it will be interesting to look at potential things that affect happiness. I expect to find that happier people are generally healthier. I think that people who are middle aged will be the happiest. I predict that taller people will have a generally higher income. I do not think that taller people will be happier than others.
+
+```{R}
+library(tidyverse)
+library(GGally)
+happy
+library(modelr)
+heights
+```
+#Tidying
+
+My data was already tidy for the most part. During the wrangling portion is when I did most of the rearranging and removed the missing values.In the code below I use pivot_wider to expand my data set. I removed the NA values after I joined the two datasets shown below in the code displayed lower as well.
+
+#Joining
+
+I used left_join in this dataset because I wanted to encompass all of the values from both heights and happy. They had several overlapping categories already so I wanted to see how everything would line up and compare. The NA values showed up in the columns that did match both data sets. The NA values were present in income, height, weight, education, afqt. This was an easy fix though, I removed the NA values. I had a bit of trouble trying to work out how to only use some of this data because together you can see that there are still over 700,000 rows. Further down, using the dplyr functions I was able to use select() to remove some of the unnecessary columns.
+
+```{R}
+happy1 <- full_join(happy, heights)
+happy1
+happyf <- happy1 %>% na.omit()
+happyf
+```
+#Wrangling
+
+In the code below I the 6 dplyr functions to readjust my data sets and look at specific factors in the data. I used the filter function to compare men and women taller than 70 inches. I arranged the data set by height and descending income. Using select I deleted education, afqt, wtssall, year, degree, weight, and id because the variables didn't align with want I want to look at. I also created a vector and used a random sample combined with set.seed() to generate a smaller subset of data containing 200 data points. Using mutate I generated a percentile for income and height.I also used group_by and summarize to look at certain factors in the data. I looked at mean height in comparison to happiness, this was interesting because people who reported being very happy were taller than people who were pretty happy and not too happy. I also used this function to find the mean income compared to happiness; the result is that people who reported 'not too happy' had a higher income. Lastly, I looked at mean age, for all 3 happiness rankings the mean was the same. 
+
+
+```{R}
+library(dplyr)
+
+happyf
+happyf %>% filter(height>=70 & happy=="pretty happy" & finrela== "average" & health== "fair" & degree== "high school" & marital=="divorced" & sex=="male")
+happyf %>% filter(height>=70 & happy=="pretty happy" & finrela== "average" & health== "fair" & marital=="divorced" & sex=="female")
+
+happyf %>% arrange(height, year, desc(income))
+
+happy2 <- happyf %>% select(-education, -afqt, -wtssall, -year, -degree, -weight, -id)
+happy2
+
+set.seed(0919)
+happy3 <- happy2[sample(nrow(happy2), 200), ]
+happy3
+
+happyfixed <- na.omit(happy3)
+happyfixed
+
+happyfixed %>% mutate(`income_perecentile` = ntile(income,100))
+happyfixed %>% mutate(`height_perecentile` = ntile(height,100))
+
+happyfixed %>%
+group_by(happy) %>%
+summarize(mean_height=mean(height,na.rm=T), sd_height=sd(height, na.rm=T), max_height=max(height, na.rm=T), min_height=min(height,na.rm=T), quantile_height=quantile(height,na.rm=T))
+
+happyfixed %>%
+group_by(happy) %>%
+summarize(mean_income=mean(income,na.rm=T), sd_income=sd(income, na.rm=T))
+
+happyfixed %>%
+group_by(happy) %>%
+summarize(mean_age=mean(age,na.rm=T), sd_age=sd(age, na.rm=T))
+
+
+happypiv <- happyfixed %>% pivot_wider(1:8)
+happypiv
+
+```
+#Visualizing
+
+The correlation test shows that there is a medium to weak correlation between the height and income variables in the dataset. Not suprisingly, age and height have a strong correlation. Height and income appear to have a weak or medium correlation. The heatmap doesn't show any many strong correlations between the datasets. I struggled a bit here to get it to code my adjusted dataset and tried it with the originally joined one, so that may have potentially skewed my result. Education had a moderate correlation with the Armed Forces Qualification test. Education also seemed to have a weak to moderate correlation with income.The first ggplot in pink compares sex to happiness. In general it seems that men reported to be 'very happy' more often than women did; both sexes reported feeling 'not too happy' about the same amount. The next ggplot in gray just shows a general representation of happiness reports from the data. Most people reported being pretty happy, followed by very happy, and lastly not too happy. The final ggplot in purple shows the mean value reported from comparing happiness to height. The mean values are very close but people in the tall category show slightly higher happiness levels.
+
+```{R}
+happyfixed%>%summarize(cor(height, income, use="pair"))
+corhappy <- happyfixed %>% select_if(is.numeric) %>% cor(use="pair")
+corhappy
+
+happyf %>% select_if(is.numeric) %>% cor %>% as.data.frame %>%
+rownames_to_column %>% pivot_longer(-1) %>%
+ggplot(aes(rowname,name,fill=value))+geom_tile()+
+geom_text(aes(label=round(value,2)))+
+xlab("")+ylab("")+coord_fixed()+
+scale_fill_gradient2(low="pink",mid="blue",high="purple")
+
+ggplot(happyfixed, aes(x = sex, fill=happy))+ geom_bar(position="fill") +
+scale_fill_brewer(palette = "RdPu")
+
+ggplot(happyfixed, aes(h))+
+geom_bar(aes(happy))+
+coord_flip()+
+theme(legend.position="none")
+
+g1 <- ggplot(happyfixed, aes(happy, height)) + geom_point()
+g1 + stat_summary(fun.data = "mean_cl_boot", colour = "purple", size = 2)
+```
+#Clustering
+I tried to create a cluster of my 3 numerical variables, definitely struggled with this one. It looks liked based on the data that 9 seems to be the best fit for K which also seems off to me. I think I coded this incorrectly. Height and income may potentially have a correlation between them.
+
+```{R}
+library(cluster)
+pamhap <- happyfixed %>% select(income,height,age)
+pamhap
+set.seed(999)
+kmean1 <- pamhap%>%kmeans(3)
+kmean1
+kmeanpam<-pamhap%>%mutate(cluster=as.factor(kmean1$cluster)) 
+
+kmeanpam%>%ggplot(aes(height,income,age,color=cluster))+geom_point() 
+
+library(cluster)
+sil_width <-vector() 
+for(i in 2:10){  
+  kms <- kmeans(pamhap,centers=i) 
+  sil <- silhouette(kms$cluster,dist(pamhap)) 
+  sil_width[i]<-mean(sil[,3]) 
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+scale_x_continuous(name="k",breaks=1:10)
+
+library(cluster)
+pam1<-pamhap%>%pam(k=3)
+pam1
+pamc<-pamhap%>%mutate(cluster=as.factor(pam1$clustering)) 
+pamc%>%ggplot(aes(height,income,age,color=cluster))+geom_point() 
+pamc%>%group_by(cluster)%>%summarize_if(is.numeric,mean,na.rm=T)
+
+happyfixed[pam1$id.med,]
+
+pam1$silinfo$avg.width
+
+pamdat<-happyfixed%>%select(height,income,age)
+sil_width<-vector()
+for(i in 2:10){  
+  pam_fit <- pam(pamdat, k = i)  
+  sil_width[i] <- pam_fit$silinfo$avg.width  
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+scale_x_continuous(name="k",breaks=1:10)
+
+#try this
+pamc %>% group_by(cluster) %>% summarize_if(is.numeric,mean,na.rm=T)
+pamc%>%mutate(species=happyfixed$happy)%>%
+ggplot(aes(height, income, color=age, shape=cluster))+geom_point(size=4)
+
+
+
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```

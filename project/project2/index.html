@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Abbie Duncan" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 2: Modeling, Testing, and Predicting</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project2/">Project 2: Modeling, Testing, and Predicting</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<pre class="r"><code>library(knitr)
+hook_output = knit_hooks$get(&#39;output&#39;)
+knit_hooks$set(output = function(x, options) {
+  # this hook is used only when the linewidth option is not NULL
+  if (!is.null(n &lt;- options$linewidth)) {
+    x = knitr:::split_lines(x)
+    # any lines wider than n should be wrapped
+    if (any(nchar(x) &gt; n)) x = strwrap(x, width = n)
+    x = paste(x, collapse = &#39;\n&#39;)
+  }
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE,fig.align=&quot;center&quot;,warning=FALSE,message=FALSE,fig.width=8, fig.height=5, linewidth=60)
+options(tibble.width = 100,width = 100)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
+## ✓ tibble  3.0.4     ✓ dplyr   1.0.2
+## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
+## ✓ readr   1.4.0     ✓ forcats 0.5.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<p>#Introduction
+<em>For project 2, I will use the dataset heights (used in project 1), I wanted to break this down more than I did in the first projet. This dataset includes: height, income, education, marital status, age, weight, and sex. From the 1920s to today, women have come a long way in society. I think every generation of women have been able to overcome adversity and chip away at the glass ceiling. I know there have been studies about the gender gap but I think it would be something interesting to look at in my own analysis. I am interested to see if income and education level are affected by sex. I have always been tall for a girl and I am curious to see if there are any benefits that come with height. In project 2, I will compare sex to height, income, and education to see if there are any significant differences or correlations between them.</em></p>
+<pre class="r"><code>library(dplyr)
+library(rstatix)
+library(modelr)
+library(tidyverse)
+library(gridExtra)
+heights</code></pre>
+<pre><code>## # A tibble: 7,006 x 8
+## income height weight age marital sex education afqt
+## &lt;int&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt; &lt;dbl&gt;
+## 1 19000 60 155 53 married female 13 6.84
+## 2 35000 70 156 51 married female 10 49.4
+## 3 105000 65 195 52 married male 16 99.4
+## 4 40000 63 197 54 married female 14 44.0
+## 5 75000 66 190 49 married male 14 59.7
+## 6 102000 68 200 49 divorced female 18 98.8
+## 7 0 74 225 48 married male 16 82.3
+## 8 70000 64 160 54 divorced female 12 50.3
+## 9 60000 69 162 55 divorced male 12 89.7
+## 10 150000 69 194 54 divorced male 13 96.0
+## # … with 6,996 more rows</code></pre>
+<pre class="r"><code>height.data &lt;- na.omit(heights)
+height.data</code></pre>
+<pre><code>## # A tibble: 6,645 x 8
+## income height weight age marital sex education afqt
+## &lt;int&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt; &lt;dbl&gt;
+## 1 19000 60 155 53 married female 13 6.84
+## 2 35000 70 156 51 married female 10 49.4
+## 3 105000 65 195 52 married male 16 99.4
+## 4 40000 63 197 54 married female 14 44.0
+## 5 75000 66 190 49 married male 14 59.7
+## 6 102000 68 200 49 divorced female 18 98.8
+## 7 0 74 225 48 married male 16 82.3
+## 8 70000 64 160 54 divorced female 12 50.3
+## 9 60000 69 162 55 divorced male 12 89.7
+## 10 150000 69 194 54 divorced male 13 96.0
+## # … with 6,635 more rows</code></pre>
+<pre class="r"><code>#I used a random sample of 200 because this dataset is huge
+set.seed(0919)
+hd &lt;- height.data[sample(nrow(height.data), 200), ]
+hd</code></pre>
+<pre><code>## # A tibble: 200 x 8
+## income height weight age marital sex education afqt
+## &lt;int&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt; &lt;dbl&gt;
+## 1 50000 67 166 50 divorced male 16 49.8
+## 2 0 64 165 52 married female 13 36.1
+## 3 50000 65 158 54 married female 12 48.1
+## 4 18000 66 220 50 married female 16 21.3
+## 5 65000 70 280 51 married male 14 19.0
+## 6 56500 72 190 49 single male 15 57.8
+## 7 24000 70 190 49 single male 14 84.4
+## 8 0 67 190 52 single female 12 23.4
+## 9 8000 61 135 48 married female 10 24.8
+## 10 0 65 130 55 married female 16 84.1
+## # … with 190 more rows</code></pre>
+<pre class="r"><code>#I also wrangled the data a little and used mutate to create a smaller income column
+#I divided the income by 1000 to make the numbers easier to analyze in the project
+#Just remember the income value is whatever that number is x1000
+height.data1 &lt;- hd %&gt;% mutate(`income_fixed` = ntile(income,1000))
+height.data1</code></pre>
+<pre><code>## # A tibble: 200 x 9
+## income height weight age marital sex education afqt
+income_fixed
+## &lt;int&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt; &lt;dbl&gt; &lt;int&gt;
+## 1 50000 67 166 50 divorced male 16 49.8 139
+## 2 0 64 165 52 married female 13 36.1 1
+## 3 50000 65 158 54 married female 12 48.1 140
+## 4 18000 66 220 50 married female 16 21.3 80
+## 5 65000 70 280 51 married male 14 19.0 161
+## 6 56500 72 190 49 single male 15 57.8 150
+## 7 24000 70 190 49 single male 14 84.4 95
+## 8 0 67 190 52 single female 12 23.4 2
+## 9 8000 61 135 48 married female 10 24.8 58
+## 10 0 65 130 55 married female 16 84.1 3
+## # … with 190 more rows</code></pre>
+<pre class="r"><code>#1 MANOVA
+
+#check MANOVA assumptions
+group &lt;- height.data1$sex
+DVs &lt;- height.data1 %&gt;% select(height,income,education)
+
+#test multivariate normality for each group
+sapply(split(DVs,group), mshapiro_test)</code></pre>
+<pre><code>##           male         female      
+## statistic 0.7559116    0.9341119   
+## p.value   4.621327e-11 4.488241e-05</code></pre>
+<pre class="r"><code>man &lt;- manova(cbind(height,income_fixed,education)~sex, data=height.data1)
+summary(man)</code></pre>
+<pre><code>## Df Pillai approx F num Df den Df Pr(&gt;F)
+## sex 1 0.56486 84.811 3 196 &lt; 2.2e-16 ***
+## Residuals 198
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>summary.aov(man)</code></pre>
+<pre><code>## Response height :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## sex 1 1613.7 1613.69 211.47 &lt; 2.2e-16 ***
+## Residuals 198 1510.9 7.63
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Response income_fixed :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## sex 1 48609 48609 15.573 0.0001102 ***
+## Residuals 198 618041 3121
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Response education :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## sex 1 2.03 2.0290 0.3286 0.5671
+## Residuals 198 1222.59 6.1747</code></pre>
+<pre class="r"><code>#pairwise t.tests
+height.data1 %&gt;%group_by(sex)%&gt;%summarize(mean(income_fixed),mean(height), mean(education))</code></pre>
+<pre><code>## # A tibble: 2 x 4
+## sex `mean(income_fixed)` `mean(height)`
+`mean(education)`
+## &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 male 117.  70.3 13.3
+## 2 female 86.1 64.6 13.5</code></pre>
+<pre class="r"><code>pairwise.t.test(height.data1$height,height.data1$sex, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  height.data1$height and height.data1$sex 
+## 
+##        male  
+## female &lt;2e-16
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(height.data1$income_fixed,height.data1$sex, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  height.data1$income_fixed and height.data1$sex 
+## 
+##        male   
+## female 0.00011
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(height.data1$education,height.data1$sex, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  height.data1$education and height.data1$sex 
+## 
+##        male
+## female 0.57
+## 
+## P value adjustment method: none</code></pre>
+<p><em>At least one species differs significantly for the response variable. Education and height show group differences. 1 MANOVA, 3 ANOVA, 6 t-tests were performed for a total of 10 tests. The probability of at least one type I error is 1-0.95^-10 = 0.401. The type 1 error rate with the Bonferroni correction is a = 0.005. Everything is still significant. MANOVA assumptions were not met.</em></p>
+<pre class="r"><code>#2 Randomization correlation test
+x1 &lt;- height.data$income
+y1 &lt;- height.data$height
+x2 &lt;- height.data$education
+#first correlation between height and income
+cor(x1,y1, method=&quot;pearson&quot;)</code></pre>
+<pre><code>## [1] 0.21765</code></pre>
+<pre class="r"><code>#second correlation between height and education
+cor(x2,y1, method=&quot;pearson&quot;)</code></pre>
+<pre><code>## [1] 0.06570976</code></pre>
+<pre class="r"><code>table(height.data1$sex)</code></pre>
+<pre><code>## 
+##   male female 
+##     92    108</code></pre>
+<pre class="r"><code>library(vegan)
+dists &lt;- height.data1 %&gt;% select(income_fixed, height, education) %&gt;% dist
+adonis(dists~sex, data=height.data1)</code></pre>
+<pre><code>##
+## Call:
+## adonis(formula = dists ~ sex, data = height.data1)
+##
+## Permutation: free
+## Number of permutations: 999
+##
+## Terms added sequentially (first to last)
+##
+## Df SumsOfSqs MeanSqs F.Model R2 Pr(&gt;F)
+## sex 1 50225 50225 16.02 0.07485 0.001 ***
+## Residuals 198 620774 3135 0.92515
+## Total 199 670999 1.00000
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>#compute observed F
+SST&lt;- sum(dists^2)/200
+SSW&lt;-height.data1%&gt;%group_by(sex)%&gt;%select(sex, income_fixed, height, education) %&gt;%
+do(d=dist(.[-1],&quot;euclidean&quot;))%&gt;%ungroup()%&gt;% summarize(sum(d[[1]]^2)/92 + sum(d[[2]]^2)/108) %&gt;% pull
+F_obs&lt;-((SST-SSW)/1)/(SSW/198) #observed F statistic
+
+Fs&lt;-replicate(1000,{
+  new &lt;- height.data1%&gt;%mutate(sex=sample(sex)) #permute the species vector 
+  SSW &lt;- new%&gt;%group_by(sex) %&gt;% select(sex,income_fixed, height, education) %&gt;%
+  do(d=dist(.[-1],&quot;euclidean&quot;)) %&gt;% ungroup() %&gt;%
+    summarize(sum(d[[1]]^2)/92 + sum(d[[2]]^2)/108) %&gt;% pull
+  ((SST-SSW)/1)/(SSW/198) #calculate new F on randomized data
+})
+
+{hist(Fs,prob = T); abline(v=F_obs, col=&quot;red&quot;, add=T)}</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p><em>A correlation test on the numeric variables in the height dataset was conducted to see if there was any relationship .The test comparing height to income showed a low correlation between the two variables (0.217). The correlation test between height and education showed no correlation between these two variables (0.065).</em>
+<em>HO: Sex will not have a strong correlation to income, education or height.</em>
+<em>HA: Sex will have a strong correlation to income or education or height.</em></p>
+<pre class="r"><code>#3 Linear Regression 
+#first one for height vs income
+height.data1%&gt;%ggplot(aes(income_fixed,height))+geom_point()
+fitted&lt;-lm(height~income_fixed, data= height.data1)
+summary(fitted)
+height.data1%&gt;%ggplot(aes(income_fixed,height))+geom_point()+geom_smooth(method = &#39;lm&#39;,se=F)       
+
+#second height vs eduation               
+height.data1%&gt;%ggplot(aes(education,height))+geom_point()
+fitted&lt;-lm(education~height, data= height.data1)
+summary(fitted)
+fit&lt;-lm(height ~ sex * income_fixed, data=height.data1); summary(fit)
+
+#third height by income + sex
+ggplot(height.data1, aes(x=height, y=income_fixed,group=sex))+geom_point(aes(color=sex))+
+geom_smooth(method=&quot;lm&quot;,formula=y~1,se=F,fullrange=T,aes(color=sex))+
+theme(legend.position=c(.9,.19))+xlab(&quot;&quot;)
+
+#normality
+par(mfrow = c(1, 2)); hist(resids); qqnorm(resids); qqline(resids, col = &#39;red&#39;)</code></pre>
+<p><em>The intercept of 69.78 is the predicted height for males with an average income. For every unit increase in income_fixed, there is 0.004 increase in height. For people with average income, females have an average height that is -4.74 times that of males. The slope of income_fixed on height for females is 0.004 greater than for males. All assumptions were met.</em></p>
+<pre class="r"><code>#4 Bootstrapping by resampling
+boot_dat&lt;- sample_frac(height.data1, replace=T)
+# repeat 5000 times
+samp_distn&lt;-replicate(5000, {
+boot_dat &lt;- sample_frac(height.data1, replace=T) #take bootstrap sample of rows
+fit &lt;- lm(height~income_fixed*sex, data=boot_dat) #fit model on bootstrap sample
+coef(fit) #save coefs
+})
+## Estimated SEs
+samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)
+
+samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% pivot_longer(1:3) %&gt;% group_by(name) %&gt;%
+summarize(lower=quantile(value,.025), upper=quantile(value,.975))</code></pre>
+<p><em>The SEs between all the tests were similar, with Heteroskedasticity SEs begin in the middle and Bootstrapped SEs being the largest. While the p-values changed between the Normal-theory SEs and Heteroskedasticity SEs, they values were still significant.</em></p>
+<pre class="r"><code>library(lmtest)
+#5 Logistic regression with binary variable
+height.data2 &lt;- height.data1 %&gt;% mutate(y = ifelse(sex == &quot;male&quot;, 1,0))
+
+log_reg&lt;-glm(y~income_fixed + education, data=height.data2, family=&quot;binomial&quot;)
+coeftest(log_reg)</code></pre>
+<pre><code>##
+## z test of coefficients:
+##
+## Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) 0.6610413 0.8250386 0.8012 0.42300
+## income_fixed 0.0129282 0.0030409 4.2514 2.125e-05 ***
+## education -0.1603992 0.0682191 -2.3512 0.01871 *
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>exp(coef(log_reg))</code></pre>
+<pre><code>##  (Intercept) income_fixed    education 
+##    1.9368081    1.0130121    0.8518037</code></pre>
+<pre class="r"><code>height.data2 &lt;- height.data2%&gt;%mutate(prob=predict(log_reg, type= &quot;response&quot;), prediction=ifelse(prob&gt;.5,1,0))
+table(predict=as.numeric(height.data2$prob&gt;.5),truth=height.data2$y)%&gt;%addmargins</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0    73  36 109
+##     1    35  56  91
+##     Sum 108  92 200</code></pre>
+<pre class="r"><code>#accuracy
+(73+56)/200</code></pre>
+<pre><code>## [1] 0.645</code></pre>
+<pre class="r"><code>#TPR
+56/92</code></pre>
+<pre><code>## [1] 0.6086957</code></pre>
+<pre class="r"><code>#TNR
+73/108</code></pre>
+<pre><code>## [1] 0.6759259</code></pre>
+<pre class="r"><code>#PPV
+56/91</code></pre>
+<pre><code>## [1] 0.6153846</code></pre>
+<pre class="r"><code>#density plot
+height.data2$logit &lt;- predict(log_reg, type=&quot;link&quot;)
+height.data2%&gt;%ggplot()+geom_density(aes(logit,color=sex,fill=sex), alpha=.4)+
+  theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab(&quot;logit (log-odds)&quot;)+
+  geom_rug(aes(logit,color=sex))</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-9-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#ROC curve
+library(plotROC)
+classify&lt;-height.data2%&gt;%transmute(prob,prediction,truth=y)
+ROCplot&lt;-ggplot(classify)+ geom_roc(aes(d=truth,m=prob), n.cuts=0)
+ROCplot</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-10-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.6955515</code></pre>
+<p><em>The data shows that every single unit increase in fixed income multiplies the odds by 1.013. The data shows that every single unit increase in education multiplies the odds by 0.852. The accuracy is 0.645. The TPR is 0.608. The TNR is 0.675. The PPV is 0.615. The AUC is 0.695. From these values, we can see that the model isn’t a very good because the AUC value is pretty low.</em></p>
+<pre class="r"><code>#6 log regression w more variables
+height.data3 &lt;- height.data2 %&gt;%mutate(y = ifelse(sex == &quot;male&quot;,1,0))
+height.data3$sex &lt;- NULL
+log_reg_all &lt;-glm(y~., data=height.data3, family = &quot;binomial&quot;)
+prob2 &lt;- predict(log_reg_all)
+coef(log_reg_all)</code></pre>
+<pre><code>## (Intercept) income height weight age
+## -8.011928e+01 1.312130e-05 8.300071e-01 -7.756703e-03
+6.053745e-02
+## maritalmarried maritalseparated maritaldivorced
+maritalwidowed education
+## -7.003741e-01 -1.696621e+00 -1.079918e+00 -2.642955e+00
+1.129832e+00
+## afqt income_fixed prob prediction logit
+## -2.682492e-02 -9.979234e-02 4.216836e+01 -1.351479e+00
+NA</code></pre>
+<pre class="r"><code>exp(coef(log_reg_all))</code></pre>
+<pre><code>## (Intercept) income height weight age
+## 1.601915e-35 1.000013e+00 2.293335e+00 9.922733e-01
+1.062407e+00
+## maritalmarried maritalseparated maritaldivorced
+maritalwidowed education
+## 4.963996e-01 1.833019e-01 3.396234e-01 7.115069e-02
+3.095136e+00
+## afqt income_fixed prob prediction logit
+## 9.735317e-01 9.050253e-01 2.058189e+18 2.588572e-01 NA</code></pre>
+<pre class="r"><code>class_diag &lt;- function(probs,truth){
+  #CONFUSION MATRIX: CALCULATE ACCURACY, TPR, TNR, PPV
+  tab&lt;-table(factor(probs&gt;.5,levels=c(&quot;FALSE&quot;,&quot;TRUE&quot;)),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  f1=2*(sens*ppv)/(sens+ppv)
+  
+  if(is.numeric(truth)==FALSE &amp; is.logical(truth)==FALSE) truth&lt;-as.numeric(truth)-1
+  
+  #CALCULATE EXACT AUC
+  ord&lt;-order(probs, decreasing=TRUE)
+  probs &lt;- probs[ord]; truth &lt;- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup&lt;-c(probs[-1]&gt;=probs[-length(probs)], FALSE)
+  TPR&lt;-c(0,TPR[!dup],1); FPR&lt;-c(0,FPR[!dup],1)
+  n &lt;- length(TPR)
+  auc&lt;- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+  
+  data.frame(acc,sens,spec,ppv,f1,auc)
+}
+
+truth = height.data3$y
+class_diag(prob2, truth)</code></pre>
+<pre><code>##     acc      sens      spec       ppv        f1       auc
+## 1 0.865 0.8043478 0.9166667 0.8915663 0.8457143 0.9527979</code></pre>
+<pre class="r"><code>table(prediction=as.numeric(prob2&gt;.5), truth)%&gt;% addmargins()</code></pre>
+<pre><code>##           truth
+## prediction   0   1 Sum
+##        0    99  18 117
+##        1     9  74  83
+##        Sum 108  92 200</code></pre>
+<pre class="r"><code>#10 fold
+set.seed(1234)
+k=10
+
+# your code here
+## k-fold CV
+
+data_CV&lt;-height.data3[sample(nrow(height.data3)),] #randomly order rows
+folds&lt;-cut(seq(1:nrow(height.data3)),breaks=k,labels=F) #create folds
+
+diags&lt;-NULL
+for(i in 1:k){
+  ## Create training and test sets
+  train&lt;-data_CV[folds!=i,] 
+  test&lt;-data_CV[folds==i,]
+  
+  truth1&lt;-test$y ## Truth labels for fold i
+  
+  ## Train model on training set (all but fold i)
+  fitCV1&lt;-glm(y~.,data=train,family=&quot;binomial&quot;)
+  
+  ## Test model on test set (fold i) 
+  probs_CV&lt;-predict(fitCV1,newdata = test,type=&quot;response&quot;)
+  
+  ## Get diagnostics for fold i
+  diags&lt;-rbind(diags,class_diag(probs_CV,truth1))
+}
+
+
+summarize_all(diags,mean) #average diagnostics across all k folds</code></pre>
+<pre><code>##    acc      sens      spec       ppv        f1       auc
+## 1 0.83 0.7881169 0.8570843 0.8274964 0.8038632 0.9073991</code></pre>
+<pre class="r"><code>#LASSO
+library(glmnet)
+set.seed(1234)
+# your code here
+y&lt;-as.matrix(height.data$sex) #grab response
+x&lt;-model.matrix(sex~.,data=height.data)[,-1] #predictors (drop intercept)
+head(x)</code></pre>
+<pre><code>## income height weight age maritalmarried maritalseparated
+maritaldivorced maritalwidowed education
+## 1 19000 60 155 53 1 0 0 0 13
+## 2 35000 70 156 51 1 0 0 0 10
+## 3 105000 65 195 52 1 0 0 0 16
+## 4 40000 63 197 54 1 0 0 0 14
+## 5 75000 66 190 49 1 0 0 0 14
+## 6 102000 68 200 49 0 0 1 0 18
+## afqt
+## 1 6.841
+## 2 49.444
+## 3 99.393
+## 4 44.022
+## 5 59.683
+## 6 98.798</code></pre>
+<pre class="r"><code>x &lt;- scale(x)
+
+cv &lt;- cv.glmnet(x,y, family=&quot;binomial&quot;)
+lasso&lt;-glmnet(x,y,family=&quot;binomial&quot;,lambda=cv$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 11 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                            s0
+## (Intercept)      -0.046844252
+## income            0.403329228
+## height            2.499670348
+## weight            0.003652838
+## age               .          
+## maritalmarried    .          
+## maritalseparated -0.013685239
+## maritaldivorced   .          
+## maritalwidowed   -0.105466531
+## education        -0.377102641
+## afqt             -0.143291136</code></pre>
+<pre class="r"><code>#10-fold CV
+set.seed(1234)
+k=10 #choose number of folds
+data1&lt;- height.data %&gt;% sample_frac
+folds &lt;- ntile(1:nrow(data1),n=10)
+
+diags&lt;-NULL 
+for(i in 1:k){
+  train&lt;-data1[folds!=i,] 
+  test&lt;-data1[folds==i,]
+  truth &lt;- test$sex
+  fit5&lt;-glm(sex~income + height + weight, data=train, family=&quot;binomial&quot;) 
+  probs5 &lt;- predict(fit5, newdata=test, type=&quot;response&quot;)
+  yhat&lt;-predict(fit5,newdata=test)
+  diags&lt;-rbind(diags,class_diag(probs5,truth))
+}
+diags%&gt;%summarize_all(mean)</code></pre>
+<pre><code>## acc sens spec ppv f1 auc
+## 1 0.8466469 0.8637308 0.8289447 0.8419588 0.8525332
+0.9236122</code></pre>
+<p><em>For the in sample analysis the ACC is 0.865, TPR is 0.804, TNR is 0.916, PPV is 0.892, and AUC is 0.953. For the out sample analysis the the ACC is 0.83, TPR is 0.788, TNR is 0.827, PPV is 0.803, and AUC is 0.907. From these results, we can see that the in sample diagnostic greatly improved the AUC value compared to the original. The out of sample diagnostic decreased the AUC value from the in sample diagnostic. For CV lasso the ACC is 0.846, TPR is 0.864, TNR is 0.829, PPV is 0.842, and AUC is 0.924. The AUC value increases compared to the out of sample diagnostic where is slightly dropped from the in sample diagnostic. The lowest AUC value came from the out of sample diagnostic compared to the other classification diagnostic analysis.</em></p>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
